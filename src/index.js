@@ -66,7 +66,28 @@ app.post('/api/createuser', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+app.put('/api/updateuser/:id', async (req, res) => {
+  const userId = req.params.id;
+  const { name, email, password } = req.body;
+  try {
+    const response = await sql`UPDATE users SET name = ${name}, email = ${email}, password = ${password} WHERE id = ${userId}`;
+    res.json({ message: 'User updated successfully', data: response });
+  } catch (error) {
+    console.error('Error executing query:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
+app.delete('/api/deleteuser/:id', async (req, res) => {
+  const userId = req.params.id;
+  try {
+    const response = await sql`DELETE FROM users WHERE id = ${userId}`;
+    res.json({ message: 'User deleted successfully', data: response });
+  } catch (error) {
+    console.error('Error executing query:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'index.html'));
 });
