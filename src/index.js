@@ -2,7 +2,7 @@ import express from 'express';
 import path from 'path';
 import postgres from 'postgres';
 import dotenv from 'dotenv';
-
+import cache from 'memory-cache'; // Import memory-cache package
 dotenv.config();
 
 const { PGHOST, PGDATABASE, PGUSER, PGPASSWORD, ENDPOINT_ID } = process.env;
@@ -27,7 +27,19 @@ async function getPgVersion() {
     console.error('Error fetching PostgreSQL version:', error);
   }
 }
-
+const cacheMiddleware = (req, res, next) => {
+  const key = req.originalUrl || req.url;
+  const cachedData = cache.get(key);
+  if (cachedData) {
+    res.send(cachedData);
+    return;
+  }res.sendResponse = res.send;
+  res.send = (body) => {
+    cache.put(key, body); // Cache the response
+    res.sendResponse(body);
+  };
+  next();
+};
 getPgVersion();
 const __dirname = path.resolve();
 
@@ -36,7 +48,7 @@ const port = 3001;
 
 app.use(express.json()); // Middleware to parse JSON request bodies
 
-app.get('/api/shoes', async (req, res) => {
+app.get('/api/shoes',cacheMiddleware, async (req, res) => {
   try {
     const data = await sql`SELECT * FROM shoes`; // Use template literals for SQL queries
     res.json(data);
@@ -46,7 +58,7 @@ app.get('/api/shoes', async (req, res) => {
   }
 });
 
-app.get('/api/navbar', async (req, res) => {
+app.get('/api/navbar', cacheMiddleware, async (req, res) => {
   try {
     const response = await sql`SELECT * FROM navbar`;
     res.json(response);
@@ -56,7 +68,7 @@ app.get('/api/navbar', async (req, res) => {
   }
 });
 
-app.post('/api/createuser', async (req, res) => {
+app.post('/api/createuser', cacheMiddleware, async (req, res) => {
   const { name, email, password } = req.body;
   try {
     const response = await sql`INSERT INTO users (name, email, password) VALUES (${name}, ${email}, ${password})`;
@@ -66,7 +78,7 @@ app.post('/api/createuser', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-app.put('/api/updateuser/:id', async (req, res) => {
+app.put('/api/updateuser/:id', cacheMiddleware, async (req, res) => {
   const userId = req.params.id;
   const { name, email, password } = req.body;
   try {
