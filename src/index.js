@@ -35,24 +35,33 @@ const app = express();
 const port = 3001;
 
 app.get('/api/shoes', async (req, res) => {
-    try {
-        const data = await sql`SELECT * FROM shoes`; // Use template literals for SQL queries
-        res.json(data);
-    } catch (error) {
-        console.error('Error executing query:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
+  try {
+    const data = await sql`SELECT * FROM shoes`; // Use template literals for SQL queries
+    res.json(data);
+  } catch (error) {
+    console.error('Error executing query:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/navbar', async (req, res) => { // Fixed the order of (req, res)
+  try {
+    const response = await sql`SELECT * FROM navbar`;
+    res.json(response);
+  } catch (error) {
+    console.error('Error executing query:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'src', 'index.html'));
+  res.sendFile(path.join(__dirname, 'src', 'index.html'));
 });
 
 app.listen(port, () => {
-    console.log(`Server is running at http://localhost:${port}`);
+  console.log(`Server is running at http://localhost:${port}`);
 });
-
-export {
+ export {
   app
-}
+ }
