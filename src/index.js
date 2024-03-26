@@ -44,7 +44,7 @@ getPgVersion();
 const __dirname = path.resolve();
 
 const app = express();
-const port = 3001;
+const port = import.meta.env.PORT || 3001;
 
 app.use(express.json()); // Middleware to parse JSON request bodies
 
